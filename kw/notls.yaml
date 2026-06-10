@@ -1,0 +1,20 @@
+apiVersion: policies.kubewarden.io/v1
+kind: AdmissionPolicy
+metadata:
+  name: enforce-tls-ingress
+  namespace: admission
+spec:
+  module: registry://ghcr.io/kubewarden/policies/ingress:v1.0.8
+  rules:
+    - apiGroups: ["networking.k8s.io"]
+      apiVersions: ["v1"]
+      resources: ["ingresses"]
+      operations: ["CREATE", "UPDATE"]
+  mutating: false
+  settings:
+    # 1. Require at least one TLS block
+    requireTLS: true
+    # 2. Deny specific annotations that would bypass SSL
+    deniedAnnotations:
+      "kubernetes.io/ingress.allow-http": "true"
+      "nginx.ingress.kubernetes.io/ssl-redirect": "false"

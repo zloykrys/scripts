@@ -1,0 +1,50 @@
+apiVersion: policies.kubewarden.io/v1
+kind: ClusterAdmissionPolicy
+metadata:
+  annotations:
+    artifacthub/pkg: verify-image-signatures/verify-image-signatures/0.2.9
+  name: check-appcollection-signatures
+spec:
+  backgroundAudit: true
+  mode: monitor
+  module: ghcr.io/kubewarden/policies/verify-image-signatures:v0.2.9
+  mutating: true
+  policyServer: default
+  # On first policy call, the policy-server downloads the image layers to
+  # verify the signatures. Later on it's cached. It may be useful to increase
+  # this timeout:
+  timeoutSeconds: 30 # default 10 seconds.
+  rules:
+    - apiGroups: [""]
+      apiVersions: ["v1"]
+      resources: ["pods"]
+      operations: ["CREATE", "UPDATE"]
+    - apiGroups: [""]
+      apiVersions: ["v1"]
+      resources: ["replicationcontrollers"]
+      operations: ["CREATE", "UPDATE"]
+    - apiGroups: ["apps"]
+      apiVersions: ["v1"]
+      resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
+      operations: ["CREATE", "UPDATE"]
+    - apiGroups: ["batch"]
+      apiVersions: ["v1"]
+      resources: ["jobs", "cronjobs"]
+      operations: ["CREATE", "UPDATE"]
+  settings:
+    modifyImagesWithDigest: true
+    rule: PublicKey
+    signatures:
+      - image: dp.apps.rancher.io/containers/*
+        pubKeys:
+          # Note: this array constitutes an AND in validation, not an OR.
+          - |-
+            -----BEGIN PUBLIC KEY-----
+            MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA02FtEt5gBywiyxbmkVsb
+            CujcBg5lur0kpEbfDk10gCcs9shVEqEO3ZsOXHursgoaDAWqdPtsYhsgczGeJz9w
+            Aw+r6BuRV8YOkE37A8s/7IOQUW0tlqtnt11OKhIiZ9+e5l3ed2H1ymKQO3dgreSy
+            rShqYdA3hrItswyp41ApF6zhjSPlR6lAmq3X4wMYLAPptmzfxigTnR4hxB5UNPhs
+            i2qA4vLrUM/i+NohECuLr1EAymvupH26HLEdM+eZnlQn+WbhIP5Grc4ba7XrBv7K
+            kywgTC7CxkiJZR0mUcUD2wTX/Je8Ewj6oPSalx09e2jtzvmU5Kr9XUyMF7Zsj5CA
+            IwIDAQAB
+            -----END PUBLIC KEY-----

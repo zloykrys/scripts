@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-too-high
+  namespace: admission
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-high
+  template:
+    metadata:
+      labels:
+        app: nginx-high
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        resources:
+          limits:
+            memory: "1024Mi" # VIOLATION: Higher than 500Mi

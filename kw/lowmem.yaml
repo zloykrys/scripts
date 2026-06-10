@@ -1,0 +1,22 @@
+apiVersion: policies.kubewarden.io/v1
+kind: AdmissionPolicy
+metadata:
+  name: namespaced-admission-limit-memory-usage
+  namespace: admission
+spec:
+  module: registry://ghcr.io/kubewarden/policies/container-resources:v1.3.1
+  mode: protect
+  mutating: true
+  policyServer: default
+  rules:
+    - apiGroups: [""]
+      apiVersions: ["v1"]
+      resources: ["pods"]
+      operations: ["CREATE", "UPDATE"]
+  settings:
+    memory:
+      # These two keys are what trigger the MUTATION
+      defaultRequest: "256M"
+      defaultLimit: "499M"
+      # This is the VALIDATION ceiling
+      maxLimit: "500M"
